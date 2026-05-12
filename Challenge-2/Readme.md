@@ -49,8 +49,8 @@ Challenge-2/
 ├── starter.py
 ├── README.md
 └── screenshots/
-    ├── ss1.png
-    └── ss2.png
+    ├── image.png
+
 ```
 
 ---

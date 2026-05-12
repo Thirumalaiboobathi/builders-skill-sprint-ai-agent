@@ -114,8 +114,8 @@ python starter.py
 
 ### Project Output
 
-![Project Output](screenshots/ss1.png)
-![Project Output](screenshots/ss2.png)
+![Project Output](screenshots/SS1.png)
+![Project Output](screenshots/SS2.png)
 
 ---
 

@@ -48,7 +48,7 @@ MODEL = "us.amazon.nova-pro-v1:0"
 # Government API Key
 # ============================================================
 
-DATA_GOV_API_KEY = os.getenv("DATA_GOV_API_KEY")
+DATA_GOV_API_KEY = "579b464db66ec23bdd000001615325bb657a494e553db7b7b0cddbe0"
 
 
 # ============================================================
@@ -302,25 +302,93 @@ def irrigation_advisor(
 # ============================================================
 
 @tool
-def market_price(crop: str) -> str:
+def market_price(
+    crop: str,
+    district: str = "",
+    state: str = "Tamil Nadu"
+) -> str:
     """
     Fetch live mandi market prices.
 
     Args:
         crop: Commodity/crop name
+        district: District name
+        state: State name
     """
 
     try:
 
-        url = (
-            "https://api.data.gov.in/resource/"
-            "9ef84268-d588-465a-a308-a864a43d0070"
-            f"?api-key={DATA_GOV_API_KEY}"
-            "&format=json"
-            f"&filters[commodity]={crop}"
+        # ====================================================
+        # Clean Input
+        # ====================================================
+
+        crop = crop.replace("?", "").strip().title()
+
+        district = (
+            district
+            .replace("?", "")
+            .strip()
+            .title()
         )
 
-        response = requests.get(url)
+        state = (
+            state
+            .replace("?", "")
+            .strip()
+            .title()
+        )
+
+        BASE_URL = (
+            "https://api.data.gov.in/resource/"
+            "9ef84268-d588-465a-a308-a864a43d0070"
+        )
+
+        params = {
+
+            "api-key": DATA_GOV_API_KEY,
+
+            "format": "json",
+
+            "limit": 10,
+
+            "filters[commodity]": crop
+        }
+
+        if district:
+
+            params["filters[district]"] = district
+
+        if state:
+
+            params["filters[state]"] = state
+
+        headers = {
+
+            "User-Agent": (
+                "Mozilla/5.0 "
+                "(Windows NT 10.0; Win64; x64)"
+            ),
+
+            "Accept": "application/json"
+        }
+
+        
+
+       
+
+        response = requests.get(
+
+            BASE_URL,
+
+            params=params,
+
+            headers=headers
+        )
+
+       
+        
+
+        
 
         data = response.json()
 
@@ -329,42 +397,52 @@ def market_price(crop: str) -> str:
         if not records:
 
             return (
-                f"❌ No market price data found for {crop}."
+                f"❌ No market price data found "
+                f"for {crop} in {district}."
             )
 
-        first = records[0]
-
-        state = first.get("state", "Unknown")
-
-        market = first.get("market", "Unknown")
-
-        commodity = first.get("commodity", crop)
-
-        min_price = first.get("min_price", "N/A")
-
-        max_price = first.get("max_price", "N/A")
-
-        modal_price = first.get("modal_price", "N/A")
-
-        arrival_date = first.get("arrival_date", "N/A")
-
-        return (
-            f"💰 Live Market Price for {commodity}:\n"
-            f"📍 State: {state}\n"
-            f"🏪 Market: {market}\n"
-            f"📅 Date: {arrival_date}\n"
-            f"⬇️ Min Price: ₹{min_price}\n"
-            f"⬆️ Max Price: ₹{max_price}\n"
-            f"📊 Modal Price: ₹{modal_price}"
+        result = (
+            f"💰 {crop} Prices in "
+            f"{district}:\n\n"
         )
+
+        for item in records[:5]:
+
+            market = item.get(
+                "market",
+                "Unknown"
+            )
+
+            market = (
+                market
+                .replace("(Uzhavar Sandhai )", "")
+                .strip()
+            )
+
+            result += (
+
+                f"📍 Market : {market}\n"
+                
+                 f"📊 Variety : "
+                f"₹{item.get('variety')}\n"
+
+                f"📊 Modal Price : "
+                f"₹{item.get('modal_price')}\n"
+
+                f"⬇️ Min Price : "
+                f"₹{item.get('min_price')}\n"
+
+                f"⬆️ Max Price : "
+                f"₹{item.get('max_price')}\n"
+
+                f"{'-' * 35}\n"
+            )
+
+        return result
 
     except Exception as e:
 
-        return (
-            f"❌ Unable to fetch market prices: {str(e)}"
-        )
-
-
+        return f"❌ Error: {str(e)}"
 # ============================================================
 # Multi-Crop Planner
 # ============================================================
@@ -493,29 +571,39 @@ with aws_docs_mcp:
         callback_handler=stream_callback,
 
         system_prompt="""
-        You are AgriNova AI Assistant 🌾🚜
+            You are AgriNova AI Assistant 🌾🚜
 
-        Responsibilities:
-        - Help farmers using smart agriculture guidance
-        - Analyze soil and recommend crops
-        - Suggest irrigation strategies
-        - Predict rainfall and weather impacts
-        - Provide live crop market prices
-        - Support sustainable farming
-        - Explain AWS smart farming technologies
-        - Remember farmer preferences
+            Responsibilities:
+            - Help farmers using smart agriculture guidance
+            - Analyze soil and recommend crops
+            - Suggest irrigation strategies
+            - Predict rainfall and weather impacts
+            - Provide live crop market prices
+            - Support sustainable farming
+            - Explain AWS smart farming technologies
+            - Remember farmer preferences
 
-        Language Support:
-        - Support Tamil and English
-        - Reply in the same language as the user
+            Language Support:
+            - Support Tamil and English
+            - Reply in the same language as the user
 
-        Rules:
-        - Be practical and supportive
-        - Use emojis naturally
-        - Keep responses concise
-        - Use tools whenever required
-        - Never expose internal reasoning
-        """
+            Safety Guardrails:
+            - Only provide agriculture and farming related guidance
+            - Never provide harmful, illegal, violent, or unsafe instructions
+            - Never suggest dangerous chemical misuse
+            - Never generate hateful, abusive, or toxic content
+            - If the user asks unrelated harmful questions, politely refuse
+            - Avoid medical, political, or illegal advice
+            - Always encourage safe and sustainable farming practices
+
+            Behavior Rules:
+            - Be practical and supportive
+            - Use emojis naturally
+            - Keep responses concise
+            - Use tools whenever required
+            - Never expose internal reasoning
+            - Never expose API keys or secrets
+            """
     )
 
     print("=" * 90)

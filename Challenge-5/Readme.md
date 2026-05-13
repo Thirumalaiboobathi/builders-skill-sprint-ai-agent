@@ -31,6 +31,7 @@ The AgriNova AI Assistant combines:
 - ⚡ Streaming AI Responses
 - ☁️ AWS Documentation MCP Integration
 - 🇮🇳 Tamil + English Support
+- 🛡️ AI Safety Guardrails
 
 ---
 
@@ -136,6 +137,21 @@ Example:
 
 ---
 
+# 🛡️ AI Safety Guardrails
+
+AgriNova AI Assistant includes basic AI safety guardrails implemented through system-level response constraints.
+
+The assistant is designed to:
+
+- Provide only agriculture and farming-related guidance
+- Avoid harmful, illegal, or unsafe instructions
+- Prevent toxic or abusive responses
+- Encourage safe and sustainable farming practices
+- Protect sensitive information such as API keys and secrets
+
+These guardrails help ensure responsible AI interactions while supporting practical farming use cases.
+
+---
 
 
 ## AWS Configuration

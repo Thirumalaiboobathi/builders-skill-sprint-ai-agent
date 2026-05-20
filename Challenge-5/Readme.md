@@ -125,18 +125,6 @@ Allows the assistant to explain:
 
 ---
 
-# 🇮🇳 Tamil Language Support
-
-Supports both:
-- Tamil
-- English
-
-Example:
-```text
-எந்த பயிர் நல்லா வளரும்?
-
----
-
 # 🛡️ AI Safety Guardrails
 
 AgriNova AI Assistant includes basic AI safety guardrails implemented through system-level response constraints.
@@ -161,6 +149,20 @@ These guardrails help ensure responsible AI interactions while supporting practi
 ```bash
 aws configure
 ```
+
+# 🇮🇳 Tamil Language Support
+
+Supports both:
+- Tamil
+- English
+
+Example:
+```text
+எந்த பயிர் நல்லா வளரும்?
+
+---
+
+
 
 Provide:
 

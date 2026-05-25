@@ -26,6 +26,7 @@ Features:
 
 import os
 import requests
+import pandas as pd
 
 os.environ["BYPASS_TOOL_CONSENT"] = "true"
 
@@ -526,6 +527,511 @@ def farming_tip(crop: str) -> str:
         f"and maintain soil nutrients for better yield."
     )
 
+# ============================================================
+# Training Data
+# ============================================================
+
+tn_scheme_df = pd.read_csv(
+    "training_data/TN_Schemes.csv"
+)
+
+central_scheme_df = pd.read_excel(
+    "training_data/central gov schemes.xlsx"
+)
+
+water_df = pd.read_excel(
+    "training_data/water_management.xlsx"
+)
+
+equipment_subsidy_df = pd.read_excel(
+    "training_data/farm_equipment_subsidy.xlsx"
+)
+
+equipment_rental_df = pd.read_excel(
+    "training_data/farm_equipment_rental.xlsx"
+)
+
+
+@tool
+def get_crop_schemes(
+    crop:str
+)->str:
+
+    crop = crop.lower()
+
+    result=[]
+
+    central = central_scheme_df[
+
+        central_scheme_df[
+            "Primary Crops"
+        ]
+
+        .astype(str)
+
+        .str.lower()
+
+        .str.contains(
+            crop,
+            na=False
+        )
+    ]
+
+    tn = tn_scheme_df[
+
+        tn_scheme_df[
+            "Primary Crops"
+        ]
+
+        .astype(str)
+
+        .str.lower()
+
+        .str.contains(
+            crop,
+            na=False
+        )
+    ]
+
+    for _,row in central.iterrows():
+
+        result.append(
+
+            f"""
+🏛 Central Scheme
+
+Scheme:
+{row['Scheme Name']}
+
+Benefit:
+{row['Benefit']}
+"""
+        )
+
+    for _,row in tn.iterrows():
+
+        result.append(
+
+            f"""
+🌾 Tamil Nadu Scheme
+
+Scheme:
+{row['Scheme']}
+
+Benefit:
+{row['Benefit']}
+"""
+        )
+
+    if not result:
+
+        return (
+            f"No schemes found "
+            f"for {crop}"
+        )
+
+    return "\n".join(result)
+
+@tool
+def water_management(
+    crop:str,
+    irrigation_source:str,
+    water_level:str
+)->str:
+
+    crop=crop.lower()
+
+    irrigation_source=(
+        irrigation_source
+        .lower()
+    )
+
+    water_level=(
+        water_level
+        .lower()
+    )
+
+    match = water_df[
+
+        (
+            water_df[
+                "Crop"
+            ]
+
+            .str.lower()
+
+            .str.contains(
+                crop,
+                na=False
+            )
+        )
+
+        &
+
+        (
+            water_df[
+                "Irrigation Source"
+            ]
+
+            .str.lower()
+
+            .str.contains(
+                irrigation_source,
+                na=False
+            )
+        )
+
+        &
+
+        (
+            water_df[
+                "Water Availability"
+            ]
+
+            .str.lower()
+
+            .str.contains(
+                water_level,
+                na=False
+            )
+        )
+    ]
+
+    if match.empty:
+
+        return (
+            "No water management "
+            "guidance found"
+        )
+
+    result=[]
+
+    for _,row in match.iterrows():
+
+        result.append(
+
+            f"""
+Crop:
+{row['Crop']}
+
+Recommendation:
+{row['Recommendation']}
+
+Technique:
+{row['Technique']}
+"""
+        )
+
+    return "\n".join(result)
+
+
+@tool
+def equipment_subsidy(
+    equipment:str
+)->str:
+
+    equipment=equipment.lower()
+
+    match=equipment_subsidy_df[
+
+        equipment_subsidy_df[
+            "Equipment"
+        ]
+
+        .str.lower()
+
+        .str.contains(
+            equipment,
+            na=False
+        )
+    ]
+
+    if match.empty:
+
+        return (
+            "No subsidy found"
+        )
+
+    result=[]
+
+    for _,row in match.iterrows():
+
+        result.append(
+
+            f"""
+Equipment:
+{row['Equipment']}
+
+Central:
+{row['Central Scheme']}
+
+State:
+{row['State Scheme']}
+
+Subsidy:
+{row['Subsidy']}
+"""
+        )
+
+    return "\n".join(result)
+
+
+@tool
+def equipment_rental(
+    equipment:str
+)->str:
+
+    equipment=equipment.lower()
+
+    match=equipment_rental_df[
+
+        equipment_rental_df[
+            "Equipment"
+        ]
+
+        .str.lower()
+
+        .str.contains(
+            equipment,
+            na=False
+        )
+    ]
+
+    if match.empty:
+
+        return (
+            "Rental information "
+            "not found"
+        )
+
+    result=[]
+
+    for _,row in match.iterrows():
+
+        result.append(
+
+            f"""
+Equipment:
+{row['Equipment']}
+
+Type:
+{row['Ownership']}
+
+Rent:
+{row['Rental / Day']}
+
+District:
+{row['District']}
+"""
+        )
+
+    return "\n".join(result)
+
+crop_calendar_df = pd.read_excel(
+    "training_data/crop_calendar.xlsx"
+)
+
+
+@tool
+def crop_calendar(
+    crop:str
+)->str:
+
+    crop=crop.lower()
+
+    match = crop_calendar_df[
+
+        crop_calendar_df[
+            "Crop"
+        ]
+
+        .str.lower()
+
+        .str.contains(
+            crop,
+            na=False
+        )
+    ]
+
+    if match.empty:
+
+        return (
+            "No crop calendar found"
+        )
+
+    result=[]
+
+    for _,row in match.iterrows():
+
+        result.append(
+
+            f"""
+Stage:
+{row['Stage']}
+
+Duration:
+{row['Duration Days']}
+
+Activity:
+{row['Activity']}
+"""
+        )
+
+    return "\n".join(result)
+
+eligibility_df = pd.read_excel(
+    "training_data/scheme_eligibility.xlsx"
+)
+
+
+@tool
+def scheme_eligibility(
+
+    crop:str,
+
+    land_type:str,
+
+    acres:float
+
+)->str:
+
+    crop=crop.lower()
+
+    land_type=land_type.lower()
+
+    match=eligibility_df[
+
+        (
+
+            eligibility_df[
+                "Crop"
+            ]
+
+            .str.lower()
+
+            .str.contains(
+                crop,
+                na=False
+            )
+
+        )
+
+        &
+
+        (
+
+            eligibility_df[
+                "Land Type"
+            ]
+
+            .str.lower()
+
+            ==land_type
+
+        )
+
+        &
+
+        (
+
+            eligibility_df[
+                "Max Acres"
+            ]
+
+            >= acres
+
+        )
+    ]
+
+    if match.empty:
+
+        return (
+            "No schemes found"
+        )
+
+    result=[]
+
+    for _,row in match.iterrows():
+
+        result.append(
+
+            f"""
+Scheme:
+{row['Scheme']}
+
+Eligibility:
+{row['Eligibility']}
+"""
+        )
+
+    return "\n".join(result)
+
+@tool
+def farm_profit(
+
+    crop:str,
+
+    area:float,
+
+    expected_yield:float,
+
+    market_price:float,
+
+    fertilizer_cost:float,
+
+    labor_cost:float,
+
+    equipment_cost:float
+
+)->str:
+
+    revenue = (
+
+        expected_yield
+
+        *
+
+        market_price
+
+    )
+
+    expense=(
+
+        fertilizer_cost
+
+        +
+
+        labor_cost
+
+        +
+
+        equipment_cost
+
+    )
+
+    profit=(
+        revenue
+        -
+        expense
+    )
+
+    return f"""
+
+Crop:
+{crop}
+
+Revenue:
+₹{revenue}
+
+Expense:
+₹{expense}
+
+Estimated Profit:
+₹{profit}
+
+"""
+
+
 
 # ============================================================
 # AWS Documentation MCP
@@ -561,9 +1067,17 @@ with aws_docs_mcp:
             soil_health_advisor,
             irrigation_advisor,
             market_price,
+            get_crop_schemes,
+            water_management,
+            equipment_subsidy,
+            equipment_rental,
+            farming_tip,
             multicrop_planner,
             fertilizer_calculator,
             farming_tip,
+            crop_calendar,
+            scheme_eligibility,
+            farm_profit,
             mem0_memory,
             *mcp_tools
         ],
